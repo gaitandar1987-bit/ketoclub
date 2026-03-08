@@ -95,6 +95,7 @@ export default function App() {
   const [onboardingDone, setOnboardingDone]       = useState(false);
   const [activeTab, setActiveTab]                 = useState("inicio");
   const [subScreen, setSubScreen]                 = useState(null);
+  const navStack = React.useRef([]);
   const [selectedProgram, setSelectedProgram]     = useState(null);
   const [programChecked, setProgramChecked]       = useState(false);
   const [umbralStartedAt, setUmbralStartedAt]     = useState(null);
@@ -425,8 +426,20 @@ export default function App() {
     setRachaRota(null);
   }
 
-  function navigate(screen) { setSubScreen(screen); }
-  function goBack() { setSubScreen(null); loadHabitStreak(); setRefreshKey(k => k + 1); }
+  function navigate(screen) {
+    if (subScreen) navStack.current.push(subScreen);
+    setSubScreen(screen);
+  }
+  function goBack() {
+    const prev = navStack.current.pop();
+    if (prev) {
+      setSubScreen(prev);
+    } else {
+      setSubScreen(null);
+      loadHabitStreak();
+      setRefreshKey(k => k + 1);
+    }
+  }
 
   const umbralDay = umbralStartedAt
     ? Math.max(1, Math.min(30, Math.floor((Date.now() - new Date(umbralStartedAt)) / 86400000) + 1))
@@ -569,7 +582,7 @@ export default function App() {
           return (
             <UmbralDayScreen
               dayNumber={selectedUmbralDay}
-              onBack={() => navigate("umbral_days")}
+              onBack={goBack}
               onMarkComplete={async (d) => {
                 await saveUmbralDay(d);
                 await loadHabitStreak();
@@ -606,7 +619,7 @@ export default function App() {
           return (
             <DespertarDayScreen
               dayNumber={selectedDespertarDay}
-              onBack={() => navigate("despertar_days")}
+              onBack={goBack}
               onMarkComplete={async (d) => {
                 await saveDespertarDay(d);
                 await loadHabitStreak();
