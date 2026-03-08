@@ -215,6 +215,7 @@ export default function HomeScreen({
   const [perfilObj,    setPerfilObj]    = useState('');
   const [perfilExp,    setPerfilExp]    = useState('');
   const [vasos,        setVasos]        = useState(0);
+  const [pasosHoy,     setPasosHoy]     = useState(0);
   const [loading,      setLoading]      = useState(true);
   const [refreshing,   setRefreshing]   = useState(false);
   const vasosAnim = useRef(Array.from({ length: 8 }, () => new Animated.Value(0))).current;
@@ -236,7 +237,7 @@ export default function HomeScreen({
   const nivelInfo   = getNivel(xpTotal);
   const progresoXP  = getProgreso(xpTotal);
 
-  useEffect(() => { cargarPerfil(); cargarVasos(); }, []);
+  useEffect(() => { cargarPerfil(); cargarVasos(); cargarPasosHoy(); }, []);
 
   async function cargarPerfil() {
     try {
@@ -257,13 +258,24 @@ export default function HomeScreen({
 
   async function onRefresh() {
     setRefreshing(true);
-    await Promise.all([cargarPerfil(), cargarVasos()]);
+    await Promise.all([cargarPerfil(), cargarVasos(), cargarPasosHoy()]);
     setRefreshing(false);
   }
 
   function hoyKeyH() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  async function cargarPasosHoy() {
+    try {
+      const memberKey2 = member?.phone || member?.id || 'guest';
+      const d = new Date();
+      const hoy = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const raw = await AsyncStorage.getItem(`pasos_${memberKey2}`);
+      const data = raw ? JSON.parse(raw) : {};
+      setPasosHoy(data[hoy] || 0);
+    } catch(e) {}
   }
 
   async function cargarVasos() {
@@ -541,6 +553,15 @@ export default function HomeScreen({
           </PressCard>
         </Animated.View>
 
+        {/* ── TIP DEL DÍA ── */}
+        <Animated.View style={animTip}>
+          <View style={styles.tipCard}>
+            <Text style={styles.tipLabel}>✨ REFLEXIÓN DEL DÍA</Text>
+            <Text style={styles.tipTxt}>"{tip}"</Text>
+            <Text style={styles.tipAutor}>— Diego Gaitán</Text>
+          </View>
+        </Animated.View>
+
         {/* ── CHAT BANNER ── */}
         <Animated.View style={animChat}>
           <PressCard onPress={() => onOpenChat?.()} style={styles.chatBanner}>
@@ -554,6 +575,126 @@ export default function HomeScreen({
             <Text style={styles.chatArrow}>→</Text>
           </PressCard>
         </Animated.View>
+
+
+        {/* ── WIDGET HIDRATACIÓN ── */}
+        <Animated.View style={animGrid}>
+          <TouchableOpacity onPress={onOpenHidratacion} activeOpacity={0.95}>
+          <View style={styles.hidraCard}>
+            <View style={styles.hidraHeader}>
+              <Text style={styles.hidraTitle}>💧 HIDRATACIÓN HOY</Text>
+              <Text style={styles.hidraMeta}>{vasos}/8 vasos</Text>
+            </View>
+            {/* Vasos */}
+            <View style={styles.vasosRow}>
+              {Array.from({ length: 8 }, (_, i) => (
+                <TouchableOpacity
+                  key={i}
+                  onPress={agregarVaso}
+                  activeOpacity={0.8}
+                  style={styles.vasoWrap}
+                >
+                  <Animated.View style={[
+                    styles.vaso,
+                    {
+                      opacity: vasosAnim[i].interpolate({ inputRange: [0,1], outputRange: [0.2, 1] }),
+                      transform: [{ scale: vasosAnim[i].interpolate({ inputRange: [0,1], outputRange: [0.7, 1] }) }],
+                      backgroundColor: i < vasos ? '#60a5fa' : 'transparent',
+                      borderColor: i < vasos ? '#60a5fa' : '#2a2010',
+                    }
+                  ]}>
+                    <Text style={styles.vasoEmoji}>{i < vasos ? '💧' : '○'}</Text>
+                  </Animated.View>
+                </TouchableOpacity>
+              ))}
+            </View>
+            {/* Barra progreso */}
+            <View style={styles.hidraBarBg}>
+              <Animated.View style={[styles.hidraBarFill, { width: `${(vasos / 8) * 100}%` }]} />
+            </View>
+            {/* Footer */}
+            <View style={styles.hidraFooter}>
+              <Text style={styles.hidraSub}>
+                {vasos === 0 && 'Empezá tu hidratación diaria 💧'}
+                {vasos > 0 && vasos < 4 && `${8 - vasos} vasos más para la meta 💪`}
+                {vasos >= 4 && vasos < 8 && `¡Casi! ${8 - vasos} vasos más ⚡`}
+                {vasos === 8 && '¡Meta cumplida! Hidratación perfecta 🏆'}
+              </Text>
+              {vasos > 0 && (
+                <TouchableOpacity onPress={quitarVaso} activeOpacity={0.7}>
+                  <Text style={styles.hidraUndo}>↩</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* ── WIDGET PASOS ── */}
+        <Animated.View style={animGrid}>
+          <TouchableOpacity onPress={onOpenPasos} activeOpacity={0.95}>
+          <View style={styles.pasosCard}>
+            <View style={styles.pasosHeader}>
+              <Text style={styles.pasosTitle}>👟 PASOS HOY</Text>
+              <Text style={styles.pasosMeta}>{pasosHoy.toLocaleString()}</Text>
+            </View>
+            <View style={styles.pasosBarBg}>
+              <View style={[styles.pasosBarFill, {
+                width: `${Math.min((pasosHoy / 10000) * 100, 100)}%`
+              }]} />
+            </View>
+            <View style={styles.pasosFooter}>
+              <Text style={styles.pasosSub}>
+                {pasosHoy === 0 && '¡Empezá a moverte hoy! 🚶'}
+                {pasosHoy > 0 && pasosHoy < 5000 && `${(10000 - pasosHoy).toLocaleString()} pasos para la meta 💪`}
+                {pasosHoy >= 5000 && pasosHoy < 10000 && `¡Casi! ${(10000 - pasosHoy).toLocaleString()} pasos más ⚡`}
+                {pasosHoy >= 10000 && '🏆 ¡Meta de 10.000 pasos completada!'}
+              </Text>
+              <Text style={styles.pasosMeta2}>{Math.min(Math.round((pasosHoy/10000)*100),100)}%</Text>
+            </View>
+          </View>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* ── WIDGET AYUNO ── */}
+        <Animated.View style={animGrid}>
+          <TouchableOpacity onPress={onOpenAyuno} activeOpacity={0.95}>
+            <View style={[styles.pasosCard, { borderColor: 'rgba(251,146,60,0.3)' }]}>
+              <View style={styles.pasosHeader}>
+                <Text style={styles.pasosTitle}>🍽️ AYUNO</Text>
+                <Text style={[styles.pasosMeta, { color: '#fb923c' }]}>Tocar para registrar</Text>
+              </View>
+              <View style={[styles.pasosBarBg, { backgroundColor: 'rgba(251,146,60,0.1)' }]}>
+                <View style={[styles.pasosBarFill, { width: '0%', backgroundColor: '#fb923c' }]} />
+              </View>
+              <View style={styles.pasosFooter}>
+                <Text style={styles.pasosSub}>Registrá tu ayuno intermitente 💪</Text>
+                <Text style={[styles.pasosMeta2, { color: '#fb923c' }]}>→</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* ── GRID ── */}
+        <Animated.View style={animGrid}>
+          <Text style={styles.sectionTitle}>Accesos rápidos</Text>
+          <View style={styles.grid}>
+            {GRID_ITEMS.map((item) => (
+              <GridItem
+                key={item.key}
+                icon={item.icon}
+                label={item.label}
+                color={item.color}
+                onPress={() => {
+                  const fn = handlers[item.key];
+                  if (fn) fn();
+                  else Alert.alert(item.label, 'Próximamente 😉');
+                }}
+              />
+            ))}
+          </View>
+        </Animated.View>
+
 
         {/* ── PROGRAMAS ── */}
         <Animated.View style={animPrograma}>
@@ -614,88 +755,6 @@ export default function HomeScreen({
               </View>
             </View>
 
-          </View>
-        </Animated.View>
-
-        {/* ── TIP DEL DÍA ── */}
-        <Animated.View style={animTip}>
-          <View style={styles.tipCard}>
-            <Text style={styles.tipLabel}>✨ REFLEXIÓN DEL DÍA</Text>
-            <Text style={styles.tipTxt}>"{tip}"</Text>
-            <Text style={styles.tipAutor}>— Diego Gaitán</Text>
-          </View>
-        </Animated.View>
-
-        {/* ── WIDGET HIDRATACIÓN ── */}
-        <Animated.View style={animGrid}>
-          <TouchableOpacity onPress={onOpenHidratacion} activeOpacity={0.95}>
-          <View style={styles.hidraCard}>
-            <View style={styles.hidraHeader}>
-              <Text style={styles.hidraTitle}>💧 HIDRATACIÓN HOY</Text>
-              <Text style={styles.hidraMeta}>{vasos}/8 vasos</Text>
-            </View>
-            {/* Vasos */}
-            <View style={styles.vasosRow}>
-              {Array.from({ length: 8 }, (_, i) => (
-                <TouchableOpacity
-                  key={i}
-                  onPress={agregarVaso}
-                  activeOpacity={0.8}
-                  style={styles.vasoWrap}
-                >
-                  <Animated.View style={[
-                    styles.vaso,
-                    {
-                      opacity: vasosAnim[i].interpolate({ inputRange: [0,1], outputRange: [0.2, 1] }),
-                      transform: [{ scale: vasosAnim[i].interpolate({ inputRange: [0,1], outputRange: [0.7, 1] }) }],
-                      backgroundColor: i < vasos ? '#60a5fa' : 'transparent',
-                      borderColor: i < vasos ? '#60a5fa' : '#2a2010',
-                    }
-                  ]}>
-                    <Text style={styles.vasoEmoji}>{i < vasos ? '💧' : '○'}</Text>
-                  </Animated.View>
-                </TouchableOpacity>
-              ))}
-            </View>
-            {/* Barra progreso */}
-            <View style={styles.hidraBarBg}>
-              <Animated.View style={[styles.hidraBarFill, { width: `${(vasos / 8) * 100}%` }]} />
-            </View>
-            {/* Footer */}
-            <View style={styles.hidraFooter}>
-              <Text style={styles.hidraSub}>
-                {vasos === 0 && 'Empezá tu hidratación diaria 💧'}
-                {vasos > 0 && vasos < 4 && `${8 - vasos} vasos más para la meta 💪`}
-                {vasos >= 4 && vasos < 8 && `¡Casi! ${8 - vasos} vasos más ⚡`}
-                {vasos === 8 && '¡Meta cumplida! Hidratación perfecta 🏆'}
-              </Text>
-              {vasos > 0 && (
-                <TouchableOpacity onPress={quitarVaso} activeOpacity={0.7}>
-                  <Text style={styles.hidraUndo}>↩</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* ── GRID ── */}
-        <Animated.View style={animGrid}>
-          <Text style={styles.sectionTitle}>Accesos rápidos</Text>
-          <View style={styles.grid}>
-            {GRID_ITEMS.map((item) => (
-              <GridItem
-                key={item.key}
-                icon={item.icon}
-                label={item.label}
-                color={item.color}
-                onPress={() => {
-                  const fn = handlers[item.key];
-                  if (fn) fn();
-                  else Alert.alert(item.label, 'Próximamente 😉');
-                }}
-              />
-            ))}
           </View>
         </Animated.View>
 
@@ -832,6 +891,17 @@ const styles = StyleSheet.create({
   infoLabel:    { fontSize: 13, color: '#6a5a40' },
   infoVal:      { fontSize: 13, color: '#f0e6c8', fontWeight: '600' },
   xpChip:       { marginTop: 5, alignSelf: 'flex-start', borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, backgroundColor: 'rgba(0,0,0,0.3)' },
+
+  // ── Pasos ──
+  pasosCard:    { backgroundColor: '#13120f', borderRadius: 20, borderWidth: 1.5, borderColor: 'rgba(52,211,153,0.3)', padding: 18, marginBottom: 8 },
+  pasosHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  pasosTitle:   { fontSize: 10, color: '#34d399', fontWeight: '900', letterSpacing: 2 },
+  pasosMeta:    { fontSize: 14, color: '#f0e6c8', fontWeight: '900' },
+  pasosMeta2:   { fontSize: 12, color: '#34d399', fontWeight: '900' },
+  pasosBarBg:   { backgroundColor: '#1e1e18', borderRadius: 6, height: 6, marginBottom: 10, overflow: 'hidden' },
+  pasosBarFill: { height: 6, borderRadius: 6, backgroundColor: '#34d399', shadowColor: '#34d399', shadowOpacity: 0.5, shadowRadius: 4, shadowOffset: { width: 0, height: 0 } },
+  pasosFooter:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  pasosSub:     { fontSize: 12, color: '#6a5a40', flex: 1 },
 
   // ── Hidratación ──
   hidraCard:    { backgroundColor: '#13120f', borderRadius: 20, borderWidth: 1.5, borderColor: 'rgba(96,165,250,0.3)', padding: 18, marginBottom: 8 },
