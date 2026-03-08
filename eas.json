@@ -1,17 +1,20 @@
 {
   "cli": {
-    "version": ">= 5.0.0"
+    "version": ">= 5.0.0",
+    "promptToConfigurePushNotifications": false
   },
   "build": {
     "preview": {
       "android": {
         "buildType": "apk"
-      }
+      },
+      "expodoctor": false
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
-      }
+      },
+      "expodoctor": false
     }
   },
   "submit": {
