@@ -30,7 +30,6 @@ import BibliotecaScreen from "./screens/BibliotecaScreen";
 import EntrenamientosScreen from "./screens/EntrenamientosScreen";
 import ProgramSelectionScreen from "./screens/ProgramSelectionScreen";
 import SuenoScreen from "./screens/SuenoScreen";
-import PasosScreen from "./screens/PasosScreen";
 import StatsScreen from "./screens/StatsScreen";
 import ResumenSemanalScreen from "./screens/ResumenSemanalScreen";
 import RachaRotaScreen from "./screens/RachaRotaScreen";
@@ -639,8 +638,7 @@ export default function App() {
           return <EntrenamientosScreen onBack={goBack} />;
         case "sueno":
           return <SuenoScreen member={member} onBack={goBack} />;
-        case "pasos":
-          return <PasosScreen member={member} onBack={goBack} />;
+
         case "hidratacion":
           return <HidratacionScreen member={member} onBack={goBack} />;
         case "stats":
@@ -711,7 +709,6 @@ export default function App() {
             onOpenBiblioteca={() => setActiveTab("biblioteca")}
             onOpenEntrenamientos={() => navigate("entrenamientos")}
             onOpenHidratacion={() => navigate("hidratacion")}
-            onOpenPasos={() => navigate("pasos")}
             refreshKey={refreshKey}
           />
         );
@@ -919,8 +916,7 @@ export default function App() {
               </TouchableOpacity>
 
               {[
-                { icon: "👣", titulo: "Pasos",               desc: "5k · 8k · 10k — Tres metas, tres premios",            color: "#4ade80", fn: () => navigate("pasos") },
-                { icon: "💪", titulo: "Entrenamientos",      desc: "Fausto Murillo · Mecha Box · HIIT · Movilidad",        color: "#f97316", fn: () => navigate("entrenamientos") },
+                                { icon: "💪", titulo: "Entrenamientos",      desc: "Fausto Murillo · Mecha Box · HIIT · Movilidad",        color: "#f97316", fn: () => navigate("entrenamientos") },
                 { icon: "🍽️", titulo: "Ayuno Intermitente", desc: "Protocolos 12h a 120h con etapas científicas",         color: "#fb923c", fn: () => navigate("ayuno") },
                 { icon: "🧘", titulo: "Meditaciones",        desc: "5 meditaciones guiadas para tu práctica diaria",       color: "#e879f9", fn: () => navigate("meditaciones") },
                 { icon: "📊", titulo: "Hábitos y Racha",     desc: `Racha actual: ${habitStreak} días consecutivos`,       color: "#c9a84c", fn: () => navigate("progress") },

@@ -62,7 +62,6 @@ const GRID_ITEMS = [
   { icon: '🔔', label: 'Alertas',      key: 'alertas',      color: '#f43f5e' },
   { icon: '🧘', label: 'Meditaciones', key: 'meditaciones', color: '#e879f9' },
   { icon: '🍽️', label: 'Ayuno',        key: 'ayuno',        color: '#fb923c' },
-  { icon: '👟', label: 'Pasos',        key: 'pasos',        color: '#34d399' },
   { icon: '💧', label: 'Hidratación',  key: 'hidratacion',  color: '#60a5fa' },
   { icon: '🤖', label: '24/7',         key: 'chat',         color: '#4ade80' },
   { icon: '👤', label: 'Perfil',       key: 'perfil',       color: '#c9a84c' },
@@ -208,7 +207,6 @@ export default function HomeScreen({
   onOpenBiblioteca,
   onOpenEntrenamientos,
   onOpenHidratacion,
-  onOpenPasos,
 }) {
   const [tip]          = useState(TIPS[Math.floor(Math.random() * TIPS.length)]);
   const [fotoPerfil,   setFotoPerfil]   = useState(null);
@@ -216,7 +214,6 @@ export default function HomeScreen({
   const [perfilObj,    setPerfilObj]    = useState('');
   const [perfilExp,    setPerfilExp]    = useState('');
   const [vasos,        setVasos]        = useState(0);
-  const [pasosHoy,     setPasosHoy]     = useState(0);
   const [loading,      setLoading]      = useState(true);
   const [refreshing,   setRefreshing]   = useState(false);
   const vasosAnim = useRef(Array.from({ length: 8 }, () => new Animated.Value(0))).current;
@@ -238,7 +235,7 @@ export default function HomeScreen({
   const nivelInfo   = getNivel(xpTotal);
   const progresoXP  = getProgreso(xpTotal);
 
-  useEffect(() => { cargarPerfil(); cargarVasos(); cargarPasosHoy(); }, [refreshKey]);
+  useEffect(() => { cargarPerfil(); cargarVasos(); }, [refreshKey]);
 
   async function cargarPerfil() {
     try {
@@ -259,24 +256,13 @@ export default function HomeScreen({
 
   async function onRefresh() {
     setRefreshing(true);
-    await Promise.all([cargarPerfil(), cargarVasos(), cargarPasosHoy()]);
+    await Promise.all([cargarPerfil(), cargarVasos()]);
     setRefreshing(false);
   }
 
   function hoyKeyH() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }
-
-  async function cargarPasosHoy() {
-    try {
-      const memberKey2 = member?.phone || member?.id || 'guest';
-      const d = new Date();
-      const hoy = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      const raw = await AsyncStorage.getItem(`pasos_${memberKey2}`);
-      const data = raw ? JSON.parse(raw) : {};
-      setPasosHoy(data[hoy] || 0);
-    } catch(e) {}
   }
 
   async function cargarVasos() {
@@ -393,7 +379,6 @@ export default function HomeScreen({
     meditaciones: onOpenMeditaciones,
     ayuno:        onOpenAyuno,
   refreshKey,
-    pasos:        onOpenPasos,
     hidratacion:  onOpenHidratacion,
     chat:         onOpenChat,
     perfil:       onOpenProfile,
@@ -627,32 +612,6 @@ export default function HomeScreen({
                   <Text style={styles.hidraUndo}>↩</Text>
                 </TouchableOpacity>
               )}
-            </View>
-          </View>
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* ── WIDGET PASOS ── */}
-        <Animated.View style={animGrid}>
-          <TouchableOpacity onPress={onOpenPasos} activeOpacity={0.95}>
-          <View style={styles.pasosCard}>
-            <View style={styles.pasosHeader}>
-              <Text style={styles.pasosTitle}>👟 PASOS HOY</Text>
-              <Text style={styles.pasosMeta}>{pasosHoy.toLocaleString()}</Text>
-            </View>
-            <View style={styles.pasosBarBg}>
-              <View style={[styles.pasosBarFill, {
-                width: `${Math.min((pasosHoy / 10000) * 100, 100)}%`
-              }]} />
-            </View>
-            <View style={styles.pasosFooter}>
-              <Text style={styles.pasosSub}>
-                {pasosHoy === 0 && '¡Empezá a moverte hoy! 🚶'}
-                {pasosHoy > 0 && pasosHoy < 5000 && `${(10000 - pasosHoy).toLocaleString()} pasos para la meta 💪`}
-                {pasosHoy >= 5000 && pasosHoy < 10000 && `¡Casi! ${(10000 - pasosHoy).toLocaleString()} pasos más ⚡`}
-                {pasosHoy >= 10000 && '🏆 ¡Meta de 10.000 pasos completada!'}
-              </Text>
-              <Text style={styles.pasosMeta2}>{Math.min(Math.round((pasosHoy/10000)*100),100)}%</Text>
             </View>
           </View>
           </TouchableOpacity>
@@ -895,11 +854,6 @@ const styles = StyleSheet.create({
   xpChip:       { marginTop: 5, alignSelf: 'flex-start', borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, backgroundColor: 'rgba(0,0,0,0.3)' },
 
   // ── Pasos ──
-  pasosCard:    { backgroundColor: '#13120f', borderRadius: 20, borderWidth: 1.5, borderColor: 'rgba(52,211,153,0.3)', padding: 18, marginBottom: 8 },
-  pasosHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  pasosTitle:   { fontSize: 10, color: '#34d399', fontWeight: '900', letterSpacing: 2 },
-  pasosMeta:    { fontSize: 14, color: '#f0e6c8', fontWeight: '900' },
-  pasosMeta2:   { fontSize: 12, color: '#34d399', fontWeight: '900' },
   pasosBarBg:   { backgroundColor: '#1e1e18', borderRadius: 6, height: 6, marginBottom: 10, overflow: 'hidden' },
   pasosBarFill: { height: 6, borderRadius: 6, backgroundColor: '#34d399', shadowColor: '#34d399', shadowOpacity: 0.5, shadowRadius: 4, shadowOffset: { width: 0, height: 0 } },
   pasosFooter:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
