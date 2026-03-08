@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, AppState } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, AppState, BackHandler } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ErrorBoundary from "./ErrorBoundary";
+import { HomeSkeleton } from "./AppSkeleton";
 
 import LoginScreen from "./screens/LoginScreen";
 import HomeScreen from "./screens/HomeScreen";
@@ -109,6 +111,7 @@ export default function App() {
   const [bannerDiaPendiente, setBannerDiaPendiente] = useState(false);
   const [rachaRota, setRachaRota]                   = useState(null); // null | número de racha anterior
 
+  const [appReady,  setAppReady]   = useState(false);
   const [bloqueado, setBloqueado]               = useState(false);
   const appStateRef = useRef(AppState.currentState);
   const ultimoBackground = useRef(null);
@@ -116,8 +119,8 @@ export default function App() {
   const memberKey = member?.phone || member?.id || "guest";
 
   useEffect(() => {
-    registerForPushNotifications();
-    scheduleDailyHabits();
+    try { registerForPushNotifications(); } catch(e) {}
+    try { scheduleDailyHabits(); } catch(e) {}
     checkOnboarding();
 
     // Escuchar cuando la app vuelve al primer plano
@@ -136,17 +139,36 @@ export default function App() {
 
         try {
           const bioEnabled = await AsyncStorage.getItem('bio_enabled');
-          if (bioEnabled !== 'true') return;
+          // Activado por defecto — solo se desactiva si el usuario lo apaga en Perfil
+          if (bioEnabled === 'false') return;
           const compatible = await LocalAuthentication.hasHardwareAsync();
           const enrolled   = await LocalAuthentication.isEnrolledAsync();
           if (!compatible || !enrolled) return;
 
+          // Disparar autenticación directa sin pantalla intermedia
           setBloqueado(true);
+          setTimeout(async () => {
+            try {
+              const result = await LocalAuthentication.authenticateAsync({
+                promptMessage: 'Verificá tu identidad para continuar',
+                cancelLabel: 'Cancelar',
+                fallbackLabel: 'Usar PIN',
+                disableDeviceFallback: false,
+              });
+              if (result.success) setBloqueado(false);
+            } catch(e) {}
+          }, 300);
         } catch(e) {}
       }
     });
 
-    return () => sub.remove();
+    const backSub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (bloqueado) return true;
+      if (subScreen) { goBack(); return true; }
+      return false;
+    });
+
+    return () => { sub.remove(); backSub.remove(); };
   }, []);
 
   async function desbloquear() {
@@ -161,11 +183,28 @@ export default function App() {
     } catch(e) {}
   }
 
+  // ── Migración de schema AsyncStorage ──────────────────────
+  async function runMigrations() {
+    try {
+      const SCHEMA_VERSION = '2';
+      const current = await AsyncStorage.getItem('schema_version');
+      if (current === SCHEMA_VERSION) return;
+
+      // v1 → v2: nada que migrar aún, base para el futuro
+      if (!current) {
+        // Primera instalación o usuario viejo sin versión — ok
+      }
+      await AsyncStorage.setItem('schema_version', SCHEMA_VERSION);
+    } catch(e) { console.warn('Migration error:', e); }
+  }
+
   async function checkOnboarding() {
     try {
+      await runMigrations();
       const done = await AsyncStorage.getItem("onboarding_done");
       if (done === "true") setOnboardingDone(true);
     } catch(e) {}
+    finally { setAppReady(true); }
   }
 
   useEffect(() => {
@@ -393,6 +432,16 @@ export default function App() {
   const despertarActivo = selectedProgram === "despertar";
 
   // ─── ONBOARDING ───────────────────────────────────────────
+  // ── APP LOADING ──────────────────────────────────────
+  if (!appReady) {
+    return (
+      <>
+        <StatusBar style="light" />
+        <HomeSkeleton />
+      </>
+    );
+  }
+
   // ── PANTALLA DE BLOQUEO ──────────────────────────────
   if (bloqueado && member) {
     return (
@@ -960,11 +1009,13 @@ export default function App() {
   }
 
   return (
-    <View style={styles.appContainer}>
-      <StatusBar style="light" />
-      <View style={styles.screenContainer}>{renderTab()}</View>
-      <TabBar activeTab={activeTab} onSelect={setActiveTab} badgeReto={badgeReto} />
-    </View>
+    <ErrorBoundary onReset={handleLogout}>
+      <View style={styles.appContainer}>
+        <StatusBar style="light" />
+        <View style={styles.screenContainer}>{renderTab()}</View>
+        <TabBar activeTab={activeTab} onSelect={setActiveTab} badgeReto={badgeReto} />
+      </View>
+    </ErrorBoundary>
   );
 }
 
