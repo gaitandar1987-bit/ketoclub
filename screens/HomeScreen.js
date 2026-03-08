@@ -853,7 +853,12 @@ const styles = StyleSheet.create({
   infoVal:      { fontSize: 13, color: '#f0e6c8', fontWeight: '600' },
   xpChip:       { marginTop: 5, alignSelf: 'flex-start', borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, backgroundColor: 'rgba(0,0,0,0.3)' },
 
-  // ── Pasos ──
+  // ── Ayuno / Pasos card ──
+  pasosCard:    { backgroundColor: '#13120f', borderRadius: 18, borderWidth: 1.5, padding: 16, marginBottom: 12, overflow: 'hidden' },
+  pasosHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  pasosTitle:   { fontSize: 12, fontWeight: '900', color: '#8a7a60', letterSpacing: 1 },
+  pasosMeta:    { fontSize: 15, fontWeight: '900', color: '#f0e6c8' },
+  pasosMeta2:   { fontSize: 15, fontWeight: '900', color: '#f0e6c8' },
   pasosBarBg:   { backgroundColor: '#1e1e18', borderRadius: 6, height: 6, marginBottom: 10, overflow: 'hidden' },
   pasosBarFill: { height: 6, borderRadius: 6, backgroundColor: '#34d399', shadowColor: '#34d399', shadowOpacity: 0.5, shadowRadius: 4, shadowOffset: { width: 0, height: 0 } },
   pasosFooter:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
