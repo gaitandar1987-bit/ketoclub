@@ -14,6 +14,39 @@ const HABITS = [
   { key: "ejercicios", label: "Ejercicios", icon: "🏃" },
 ];
 
+const FRASES_IDENTIDAD = [
+  { frase: "Tu identidad no cambia en un día. Cambia cuando repetís acciones correctas hasta que se vuelven quien sos.", emoji: "🔥" },
+  { frase: "No buscás motivación. La motivación viene cuando ya empezaste. Actuá primero.", emoji: "⚡" },
+  { frase: "Cada hábito que completás es un voto a favor de la persona que estás eligiendo ser.", emoji: "🗳️" },
+  { frase: "El dolor de la disciplina es temporal. El dolor del arrepentimiento es permanente.", emoji: "💎" },
+  { frase: "No sos lo que pensás de vos. Sos lo que hacés todos los días.", emoji: "🧠" },
+  { frase: "La consistencia no es un talento. Es una decisión que tomás cada mañana.", emoji: "🌅" },
+  { frase: "Un día a la vez. Una decisión a la vez. Una victoria a la vez.", emoji: "🏆" },
+  { frase: "El cuerpo logra lo que la mente cree. Creé primero, actuá después.", emoji: "💪" },
+  { frase: "No comparés tu capítulo 1 con el capítulo 20 de otro. Escribí tu historia.", emoji: "📖" },
+  { frase: "La disciplina es elegirte a vos mismo sobre tus excusas. Todos los días.", emoji: "🎯" },
+  { frase: "Pequeñas acciones repetidas con consistencia construyen resultados extraordinarios.", emoji: "🌱" },
+  { frase: "No esperes sentirte listo. La preparación viene mientras actuás.", emoji: "🚀" },
+  { frase: "Tu cuerpo escucha todo lo que tu mente dice. Hablale bien.", emoji: "💫" },
+  { frase: "El éxito no es un evento. Es la suma de tus decisiones cotidianas.", emoji: "✨" },
+  { frase: "No hay atajos hacia un lugar que valga la pena llegar.", emoji: "🛤️" },
+  { frase: "Cuando no tenés ganas es exactamente cuando más importa que lo hagás.", emoji: "🔑" },
+  { frase: "La versión que querés ser ya existe. Solo necesita que vayas a buscarla.", emoji: "🪞" },
+  { frase: "El sacrificio de hoy es el regalo de mañana. Invertís en vos.", emoji: "🎁" },
+  { frase: "No le debés explicaciones a nadie. Pero te las debés a vos mismo.", emoji: "🤝" },
+  { frase: "Ganá el día. No la semana, no el mes. El día de hoy.", emoji: "☀️" },
+  { frase: "Lo que repetís se convierte en lo que sos. Elegí bien qué repetir.", emoji: "🔄" },
+  { frase: "La fuerza no viene del cuerpo. Viene de la voluntad de no rendirse.", emoji: "🦁" },
+  { frase: "Cada vez que terminás lo que empezaste, construís confianza en vos mismo.", emoji: "🏗️" },
+  { frase: "La mentalidad correcta no es un regalo. Es un músculo. Entrenalo.", emoji: "🧬" },
+  { frase: "Sos más fuerte de lo que creés, más capaz de lo que imaginás.", emoji: "⚔️" },
+  { frase: "El cambio no es un destino. Es una forma de vivir.", emoji: "🌊" },
+  { frase: "Un guerrero no es alguien que no cae. Es alguien que se levanta siempre.", emoji: "⚡" },
+  { frase: "Lo que hacés hoy en silencio hablará por vos mañana.", emoji: "🤫" },
+  { frase: "La versión más fuerte de vos está del otro lado del hábito que estás construyendo.", emoji: "🔓" },
+  { frase: "Cada repetición cuenta. Cada día suma. Cada elección define.", emoji: "🎯" },
+];
+
 const WEEKLY_MESSAGES = {
   7: "No llegaste hasta acá por casualidad. Estos 7 días son prueba de que sí podés sostenerte. Tu nueva identidad no se está pensando, se está construyendo.",
   14: "Dos semanas de compromiso cambian más que meses de intención vacía. Lo que estás haciendo no es solo disciplina: es respeto por tu vida.",
@@ -161,6 +194,11 @@ export default function ProgressScreen({ member, onBack, onLogout }) {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMsg, setToastMsg]         = useState('');
   const [toastColor, setToastColor]     = useState('#4ade80');
+
+  const fraseDelDia = useMemo(() => {
+    const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+    return FRASES_IDENTIDAD[dayOfYear % FRASES_IDENTIDAD.length];
+  }, []);
 
   const doneCount = Object.values(checks).filter(Boolean).length;
   const percent = Math.round((doneCount / HABITS.length) * 100);
@@ -394,36 +432,78 @@ export default function ProgressScreen({ member, onBack, onLogout }) {
         )}
 
         <View style={styles.quoteCard}>
-          <Text style={styles.quoteTitle}>IDENTIDAD</Text>
-          <Text style={styles.quoteText}>
-            Tu identidad no cambia en un día. Cambia cuando repetís acciones correctas hasta que se vuelven quien sos.
-          </Text>
+          <View style={styles.quoteTitleRow}>
+            <Text style={styles.quoteTitle}>✨ IDENTIDAD DEL DÍA</Text>
+            <Text style={styles.quoteEmoji}>{fraseDelDia.emoji}</Text>
+          </View>
+          <Text style={styles.quoteText}>"{fraseDelDia.frase}"</Text>
           <Text style={styles.quoteAuthor}>— Diego Gaitán</Text>
         </View>
 
-        <Text style={styles.sectionTitle}>Mapa de disciplina</Text>
-        <Text style={styles.mapSub}>Últimos 28 días</Text>
+        {/* ── MAPA DISCIPLINA PREMIUM ── */}
+        <View style={styles.mapaCard}>
+          <View style={styles.mapaTitleRow}>
+            <Text style={styles.mapaTitle}>🗓 DISCIPLINA</Text>
+            <Text style={styles.mapaSub}>Últimos 28 días</Text>
+          </View>
 
-        <View style={styles.heatmap}>
-          {heatDays.map((day) => {
-            const p = history?.[day]?.percent || 0;
+          {/* Grid 7x4 por semanas */}
+          <View style={styles.mapaGrid}>
+            {['L','M','X','J','V','S','D'].map(d => (
+              <Text key={d} style={styles.mapaDayLabel}>{d}</Text>
+            ))}
+            {heatDays.map((day) => {
+              const p = history?.[day]?.percent || 0;
+              const isToday = day === today;
+              return (
+                <View
+                  key={day}
+                  style={[
+                    styles.mapaCelda,
+                    { backgroundColor: getHeatColor(p) },
+                    isToday && styles.mapaCeldaHoy,
+                  ]}
+                >
+                  {p === 100 && <Text style={styles.mapaStar}>★</Text>}
+                </View>
+              );
+            })}
+          </View>
+
+          {/* Leyenda */}
+          <View style={styles.mapaLegenda}>
+            <Text style={styles.mapaLegendaTxt}>Sin hábitos</Text>
+            <View style={styles.mapaLegendaBarras}>
+              {['#1a1a14','#7c5a18','#c9a84c','#84cc16','#22c55e'].map((c,i) => (
+                <View key={i} style={[styles.mapaLegendaBox, { backgroundColor: c }]} />
+              ))}
+            </View>
+            <Text style={styles.mapaLegendaTxt}>100%</Text>
+          </View>
+
+          {/* Stats del mapa */}
+          {(() => {
+            const diasConActividad = heatDays.filter(d => (history?.[d]?.percent || 0) > 0).length;
+            const diasPerfectos = heatDays.filter(d => (history?.[d]?.percent || 0) === 100).length;
             return (
-              <View
-                key={day}
-                style={[styles.heatCell, { backgroundColor: getHeatColor(p) }]}
-              />
+              <View style={styles.mapaStats}>
+                <View style={styles.mapaStatItem}>
+                  <Text style={styles.mapaStatNum}>{diasConActividad}</Text>
+                  <Text style={styles.mapaStatLabel}>días activos</Text>
+                </View>
+                <View style={styles.mapaStatDiv} />
+                <View style={styles.mapaStatItem}>
+                  <Text style={[styles.mapaStatNum, { color: '#22c55e' }]}>{diasPerfectos}</Text>
+                  <Text style={styles.mapaStatLabel}>días perfectos ★</Text>
+                </View>
+                <View style={styles.mapaStatDiv} />
+                <View style={styles.mapaStatItem}>
+                  <Text style={[styles.mapaStatNum, { color: '#c9a84c' }]}>{streak}</Text>
+                  <Text style={styles.mapaStatLabel}>racha actual 🔥</Text>
+                </View>
+              </View>
             );
-          })}
-        </View>
-
-        <View style={styles.legendRow}>
-          <Text style={styles.legendText}>0%</Text>
-          <View style={[styles.legendBox, { backgroundColor: "#1a1a14" }]} />
-          <View style={[styles.legendBox, { backgroundColor: "#7c5a18" }]} />
-          <View style={[styles.legendBox, { backgroundColor: "#c9a84c" }]} />
-          <View style={[styles.legendBox, { backgroundColor: "#84cc16" }]} />
-          <View style={[styles.legendBox, { backgroundColor: "#22c55e" }]} />
-          <Text style={styles.legendText}>100%</Text>
+          })()}
         </View>
 
         <View style={{ height: 40 }} />
@@ -640,62 +720,36 @@ const styles = StyleSheet.create({
   },
   toastText: { fontSize: 13, fontWeight: '800', textAlign: 'center', lineHeight: 20 },
   quoteCard: {
-    marginTop: 12,
-    marginBottom: 22,
+    marginTop: 12, marginBottom: 22,
     backgroundColor: "#13120f",
-    borderRadius: 16,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "rgba(201,168,76,0.2)",
+    borderRadius: 20, padding: 20,
+    borderWidth: 1.5, borderColor: "rgba(201,168,76,0.35)",
   },
+  quoteTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  quoteTitle: { color: "#c9a84c", fontSize: 10, letterSpacing: 3, fontWeight: '900' },
+  quoteEmoji: { fontSize: 22 },
+  quoteText: { color: "#f0e6c8", fontSize: 15, lineHeight: 26, fontStyle: "italic", marginBottom: 12 },
+  quoteAuthor: { color: "#6a5a40", fontSize: 12 },
 
-  quoteTitle: {
-    color: "#c9a84c",
-    fontSize: 10,
-    letterSpacing: 3,
-    marginBottom: 10,
-  },
-
-  quoteText: {
-    color: "#e8e0d0",
-    fontSize: 15,
-    lineHeight: 24,
-    fontStyle: "italic",
-    marginBottom: 10,
-  },
-
-  quoteAuthor: {
-    color: "#6a5a40",
-    fontSize: 12,
-  },
-
-  heatmap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-    marginBottom: 14,
-  },
-
-  heatCell: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#2a2010",
-  },
-
-  legendRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 12,
-  },
-
-  legendBox: {
-    width: 14,
-    height: 14,
-    borderRadius: 4,
-  },
+  // ── Mapa premium ──
+  mapaCard: { backgroundColor: '#13120f', borderRadius: 20, padding: 18, borderWidth: 1.5, borderColor: 'rgba(201,168,76,0.2)', marginBottom: 20 },
+  mapaTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  mapaTitle: { fontSize: 12, fontWeight: '900', color: '#c9a84c', letterSpacing: 2 },
+  mapaSub: { fontSize: 11, color: '#4a3a20' },
+  mapaGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 12 },
+  mapaDayLabel: { width: 32, textAlign: 'center', fontSize: 9, color: '#4a3a20', fontWeight: '700', marginBottom: 2 },
+  mapaCelda: { width: 32, height: 32, borderRadius: 8, borderWidth: 1, borderColor: '#2a2010', alignItems: 'center', justifyContent: 'center' },
+  mapaCeldaHoy: { borderWidth: 2, borderColor: '#c9a84c' },
+  mapaStar: { fontSize: 10, color: '#0a0a0c' },
+  mapaLegenda: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 },
+  mapaLegendaTxt: { fontSize: 10, color: '#4a3a20' },
+  mapaLegendaBarras: { flexDirection: 'row', gap: 4, flex: 1 },
+  mapaLegendaBox: { flex: 1, height: 8, borderRadius: 4 },
+  mapaStats: { flexDirection: 'row', backgroundColor: '#0a0a0c', borderRadius: 14, padding: 14, alignItems: 'center' },
+  mapaStatItem: { flex: 1, alignItems: 'center' },
+  mapaStatNum: { fontSize: 22, fontWeight: '900', color: '#f0e6c8', marginBottom: 2 },
+  mapaStatLabel: { fontSize: 10, color: '#6a5a40', textAlign: 'center' },
+  mapaStatDiv: { width: 1, height: 36, backgroundColor: '#2a2010' },
 
   legendText: {
     color: "#6a5a40",
