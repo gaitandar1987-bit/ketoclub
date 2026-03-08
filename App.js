@@ -117,6 +117,7 @@ export default function App() {
   const ultimoBackground = useRef(null);
 
   const memberKey = member?.phone || member?.id || "guest";
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     try { registerForPushNotifications(); } catch(e) {}
@@ -426,7 +427,7 @@ export default function App() {
   }
 
   function navigate(screen) { setSubScreen(screen); }
-  function goBack() { setSubScreen(null); loadHabitStreak(); }
+  function goBack() { setSubScreen(null); loadHabitStreak(); setRefreshKey(k => k + 1); }
 
   const umbralDay = umbralStartedAt
     ? Math.max(1, Math.min(30, Math.floor((Date.now() - new Date(umbralStartedAt)) / 86400000) + 1))
@@ -711,6 +712,7 @@ export default function App() {
             onOpenEntrenamientos={() => navigate("entrenamientos")}
             onOpenHidratacion={() => navigate("hidratacion")}
             onOpenPasos={() => navigate("pasos")}
+            refreshKey={refreshKey}
           />
         );
 

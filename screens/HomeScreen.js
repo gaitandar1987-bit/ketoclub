@@ -203,6 +203,7 @@ export default function HomeScreen({
   onOpenMeditaciones,
   onOpenRecetas,
   onOpenAyuno,
+  refreshKey,
   onOpenChat,
   onOpenBiblioteca,
   onOpenEntrenamientos,
@@ -237,7 +238,7 @@ export default function HomeScreen({
   const nivelInfo   = getNivel(xpTotal);
   const progresoXP  = getProgreso(xpTotal);
 
-  useEffect(() => { cargarPerfil(); cargarVasos(); cargarPasosHoy(); }, []);
+  useEffect(() => { cargarPerfil(); cargarVasos(); cargarPasosHoy(); }, [refreshKey]);
 
   async function cargarPerfil() {
     try {
@@ -391,6 +392,7 @@ export default function HomeScreen({
     alertas:      onOpenNotifications,
     meditaciones: onOpenMeditaciones,
     ayuno:        onOpenAyuno,
+  refreshKey,
     pasos:        onOpenPasos,
     hidratacion:  onOpenHidratacion,
     chat:         onOpenChat,
