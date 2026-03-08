@@ -126,26 +126,35 @@ export default function PasosScreen({ member, onBack }) {
   async function iniciarHealthConnect() {
     try {
       setCargando(true);
+      // Verificar que las funciones existen (protección si la lib no cargó)
+      if (typeof initialize !== 'function') {
+        setEstado('manual');
+        setCargando(false);
+        return;
+      }
       // 1. Inicializar Health Connect
-      const isInit = await initialize();
+      let isInit = false;
+      try { isInit = await initialize(); } catch(e) { isInit = false; }
       if (!isInit) {
         setEstado('sin_app');
         setCargando(false);
         return;
       }
-
       // 2. Pedir permisos
-      const perms = await requestPermission([
-        { accessType: 'read', recordType: 'Steps' },
-      ]);
-
+      let perms = [];
+      try {
+        perms = await requestPermission([{ accessType: 'read', recordType: 'Steps' }]);
+      } catch(e) {
+        setEstado('sin_permiso');
+        setCargando(false);
+        return;
+      }
       const tienePermiso = perms.some(p => p.recordType === 'Steps' && p.accessType === 'read');
       if (!tienePermiso) {
         setEstado('sin_permiso');
         setCargando(false);
         return;
       }
-
       setEstado('ok');
       // 3. Leer pasos de hoy
       await leerPasosHoy();
