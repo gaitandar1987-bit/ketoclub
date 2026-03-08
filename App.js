@@ -162,14 +162,18 @@ export default function App() {
       }
     });
 
+    return () => { sub.remove(); };
+  }, []);
+
+  // BackHandler separado para capturar subScreen actualizado
+  useEffect(() => {
     const backSub = BackHandler.addEventListener('hardwareBackPress', () => {
       if (bloqueado) return true;
       if (subScreen) { goBack(); return true; }
       return false;
     });
-
-    return () => { sub.remove(); backSub.remove(); };
-  }, []);
+    return () => backSub.remove();
+  }, [subScreen, bloqueado]);
 
   async function desbloquear() {
     try {
