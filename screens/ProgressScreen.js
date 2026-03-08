@@ -158,6 +158,9 @@ export default function ProgressScreen({ member, onBack, onLogout }) {
   const [history, setHistory] = useState({});
   const [loaded, setLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMsg, setToastMsg]         = useState('');
+  const [toastColor, setToastColor]     = useState('#4ade80');
 
   const doneCount = Object.values(checks).filter(Boolean).length;
   const percent = Math.round((doneCount / HABITS.length) * 100);
@@ -258,7 +261,28 @@ export default function ProgressScreen({ member, onBack, onLogout }) {
   }, [percent, loaded]);
 
   function toggle(key) {
-    setChecks((prev) => ({ ...prev, [key]: !prev[key] }));
+    setChecks((prev) => {
+      const newChecks = { ...prev, [key]: !prev[key] };
+      const done = Object.values(newChecks).filter(Boolean).length;
+      const total = HABITS.length;
+      if (!prev[key]) {
+        // solo mostrar al marcar, no al desmarcar
+        if (done === 1) showProgressToast('🌱 Primer hábito del día. El movimiento crea momentum.', '#4ade80');
+        else if (done === 2) showProgressToast('⚡ Dos hábitos. Ya sos mejor que ayer.', '#60a5fa');
+        else if (done === 3) showProgressToast('🔥 Mitad del camino. Seguí, esto es identidad.', '#f97316');
+        else if (done === 4) showProgressToast('💪 4 de 7. Más de la mitad. Sos disciplina.', '#c9a84c');
+        else if (done === 5) showProgressToast('⚡ 5 hábitos. Hoy sos una máquina, seguí.', '#a78bfa');
+        else if (done === 6) showProgressToast('🏆 Solo falta uno. El último es el más importante.', '#fbbf24');
+      }
+      return newChecks;
+    });
+  }
+
+  function showProgressToast(msg, color) {
+    setToastMsg(msg);
+    setToastColor(color);
+    setToastVisible(true);
+    setTimeout(() => setToastVisible(false), 2800);
   }
 
   async function onRefresh() {
@@ -361,6 +385,13 @@ export default function ProgressScreen({ member, onBack, onLogout }) {
             </TouchableOpacity>
           );
         })}
+
+        {/* ── TOAST PROGRESO ── */}
+        {toastVisible && (
+          <View style={[styles.toastBar, { borderColor: toastColor + '60', backgroundColor: toastColor + '15' }]}>
+            <Text style={[styles.toastText, { color: toastColor }]}>{toastMsg}</Text>
+          </View>
+        )}
 
         <View style={styles.quoteCard}>
           <Text style={styles.quoteTitle}>IDENTIDAD</Text>
@@ -603,6 +634,11 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
 
+  toastBar: {
+    borderRadius: 14, borderWidth: 1.5, padding: 14, marginBottom: 12,
+    alignItems: 'center',
+  },
+  toastText: { fontSize: 13, fontWeight: '800', textAlign: 'center', lineHeight: 20 },
   quoteCard: {
     marginTop: 12,
     marginBottom: 22,
