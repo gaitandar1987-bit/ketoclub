@@ -185,7 +185,7 @@ export default function ProfileScreen({ member, umbralCompletedDays = [], habitS
     if (!result.canceled) {
       const uri = result.assets[0].uri;
       const key = `foto_${member?.phone || member?.id || 'guest'}`;
-      await cacheSet(AsyncStorage, key, uri);
+      await AsyncStorage.setItem(key, uri);
       setFotoPerfil(uri);
     }
   }
