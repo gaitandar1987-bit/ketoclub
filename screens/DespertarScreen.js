@@ -31,7 +31,7 @@ function PulsingDot({ color = COLOR, size = 8, delay = 0 }) {
   );
 }
 
-export default function DespertarScreen({ completedDays = [], startedAtISO, onBack, onOpenDays }) {
+export default function DespertarScreen({ completedDays = [], startedAtISO, onBack, onOpenDays, onOpenProgress }) {
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
@@ -117,7 +117,7 @@ export default function DespertarScreen({ completedDays = [], startedAtISO, onBa
 
         {/* PROGRESO */}
         <Animated.View style={{ opacity: fadeStats, transform: [{ translateY: slideStats }] }}>
-          <View style={styles.progressCard}>
+          <TouchableOpacity style={styles.progressCard} onPress={() => onOpenProgress?.()} activeOpacity={0.85}>
             <View style={styles.progressTopRow}>
               <Text style={styles.progressLabel}>PROGRESO TOTAL</Text>
               <Text style={styles.progressPct}>{Math.round(progress * 100)}%</Text>
@@ -126,7 +126,8 @@ export default function DespertarScreen({ completedDays = [], startedAtISO, onBa
               <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
             </View>
             <Text style={styles.progressSub}>{completados} de 30 días completados</Text>
-          </View>
+            <Text style={styles.progressTap}>Toca para ver progreso detallado →</Text>
+          </TouchableOpacity>
         </Animated.View>
 
         {/* SEMANAS */}
@@ -138,10 +139,14 @@ export default function DespertarScreen({ completedDays = [], startedAtISO, onBa
             const semanaActualIdx   = Math.ceil(diaActual / 7) - 1;
             const estaActual        = semanaActualIdx === i;
             return (
-              <View key={i} style={[styles.semanaCard, {
-                borderColor: s.color + (estaActual ? '60' : '30'),
-                backgroundColor: estaActual ? s.color + '0d' : '#13120f',
-              }]}>
+              <TouchableOpacity
+                key={i}
+                onPress={() => onOpenDays?.()}
+                activeOpacity={0.85}
+                style={[styles.semanaCard, {
+                  borderColor: s.color + (estaActual ? '60' : '30'),
+                  backgroundColor: estaActual ? s.color + '0d' : '#13120f',
+                }]}>
                 {estaActual && (
                   <View style={[styles.semanaActivaBadge, { backgroundColor: s.color + '25', borderColor: s.color + '50' }]}>
                     <Text style={[styles.semanaActivaTxt, { color: s.color }]}>AHORA</Text>
@@ -164,7 +169,10 @@ export default function DespertarScreen({ completedDays = [], startedAtISO, onBa
                   </View>
                   <Text style={[styles.semanaCnt, { color: s.color }]}>{completadosSemana}/{s.dias}</Text>
                 </View>
-              </View>
+                <View style={[styles.semanaIrBtn, { borderColor: s.color + '40' }]}>
+                  <Text style={[styles.semanaIrTxt, { color: s.color }]}>Ver días →</Text>
+                </View>
+              </TouchableOpacity>
             );
           })}
         </Animated.View>
@@ -241,6 +249,9 @@ const styles = StyleSheet.create({
   semanaProgressBg:   { backgroundColor: '#1e1e18', borderRadius: 4, height: 4 },
   semanaProgressFill: { borderRadius: 4, height: 4 },
   semanaCnt:          { fontSize: 13, fontWeight: '900', flexShrink: 0 },
+  semanaIrBtn:        { marginTop: 8, borderWidth: 1, borderRadius: 8, paddingVertical: 5, paddingHorizontal: 8, alignSelf: 'flex-start' },
+  semanaIrTxt:        { fontSize: 10, fontWeight: '900' },
+  progressTap:        { fontSize: 10, color: '#a78bfa', marginTop: 6, fontWeight: '700' },
   infoCard:           { backgroundColor: '#13120f', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(167,139,250,0.2)', padding: 18, marginBottom: 16 },
   infoTitle:          { fontSize: 14, fontWeight: '900', color: '#f0e6c8', marginBottom: 8 },
   infoTxt:            { fontSize: 14, color: '#c8bfa8', lineHeight: 22 },

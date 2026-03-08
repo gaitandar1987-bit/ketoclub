@@ -99,7 +99,7 @@ export default function UmbralScreen({
         </Animated.View>
 
         {/* ── BARRA PROGRESO ── */}
-        <View style={styles.progressCard}>
+        <TouchableOpacity style={styles.progressCard} onPress={() => onOpenProgress?.()} activeOpacity={0.85}>
           <View style={styles.progressTopRow}>
             <Text style={styles.progressLabel}>PROGRESO TOTAL</Text>
             <Text style={styles.progressPct}>{Math.round(progress * 100)}%</Text>
@@ -111,7 +111,8 @@ export default function UmbralScreen({
             ]} />
           </View>
           <Text style={styles.progressSub}>{completados} de 30 días completados</Text>
-        </View>
+          <Text style={styles.progressTap}>Toca para ver progreso detallado →</Text>
+        </TouchableOpacity>
 
         {/* ── SEMANAS ── */}
         <Text style={styles.sectionTitle}>Las 4 semanas</Text>
@@ -119,12 +120,17 @@ export default function UmbralScreen({
           {SEMANAS.map((s) => {
             const estaActual = semanaActual === s.numero;
             const completada = semanaActual > s.numero;
+            const diaInicio  = (s.numero - 1) * 7 + 1;
             return (
-              <View key={s.numero} style={[
-                styles.semanaCard,
-                { borderColor: s.color + (estaActual ? '60' : '25') },
-                estaActual && { backgroundColor: s.color + '10' },
-              ]}>
+              <TouchableOpacity
+                key={s.numero}
+                onPress={() => onOpenDays?.(startedAtISO || new Date().toISOString(), diaInicio)}
+                activeOpacity={0.85}
+                style={[
+                  styles.semanaCard,
+                  { borderColor: s.color + (estaActual ? '60' : '25') },
+                  estaActual && { backgroundColor: s.color + '10' },
+                ]}>
                 {completada && (
                   <View style={[styles.semanaCheckBadge, { backgroundColor: s.color + '20', borderColor: s.color + '40' }]}>
                     <Text style={[styles.semanaCheckTxt, { color: s.color }]}>✓</Text>
@@ -139,7 +145,10 @@ export default function UmbralScreen({
                 <Text style={[styles.semanaNombre, { color: estaActual ? s.color : '#8a7a60' }]}>{s.nombre}</Text>
                 <Text style={styles.semanaDias}>Días {s.dias}</Text>
                 <Text style={styles.semanaDesc}>{s.desc}</Text>
-              </View>
+                <View style={[styles.semanaIrBtn, { borderColor: s.color + '40' }]}>
+                  <Text style={[styles.semanaIrTxt, { color: s.color }]}>Ver días →</Text>
+                </View>
+              </TouchableOpacity>
             );
           })}
         </View>
@@ -209,6 +218,9 @@ const styles = StyleSheet.create({
   semanaNombre:       { fontSize: 11, fontWeight: '900', letterSpacing: 1, marginBottom: 4 },
   semanaDias:         { fontSize: 10, color: '#4a3a20', marginBottom: 6, fontWeight: '700' },
   semanaDesc:         { fontSize: 11, color: '#6a5a40', lineHeight: 16 },
+  semanaIrBtn:        { marginTop: 8, borderWidth: 1, borderRadius: 8, paddingVertical: 5, paddingHorizontal: 8, alignSelf: 'flex-start' },
+  semanaIrTxt:        { fontSize: 10, fontWeight: '900' },
+  progressTap:        { fontSize: 10, color: '#c9a84c', marginTop: 6, fontWeight: '700' },
   ctaBtn:             { backgroundColor: '#c9a84c', borderRadius: 16, paddingVertical: 18, alignItems: 'center', marginBottom: 12, shadowColor: '#c9a84c', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 6 },
   ctaBtnTxt:          { color: '#0a0a0c', fontWeight: '900', fontSize: 16 },
   linksRow:           { flexDirection: 'row', gap: 10, marginBottom: 20 },

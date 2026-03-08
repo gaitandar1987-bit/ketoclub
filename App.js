@@ -601,6 +601,7 @@ export default function App() {
                 await saveDespertarStartedAt(iso);
                 navigate("despertar_days");
               }}
+              onOpenProgress={() => navigate("progress")}
             />
           );
         case "despertar_days":
