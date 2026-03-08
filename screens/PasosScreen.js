@@ -5,11 +5,17 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sumarXP } from '../xp';
-import {
-  initialize,
-  requestPermission,
-  readRecords,
-} from 'react-native-health-connect';
+let initialize, requestPermission, readRecords;
+try {
+  const hc = require('react-native-health-connect');
+  initialize = hc.initialize;
+  requestPermission = hc.requestPermission;
+  readRecords = hc.readRecords;
+} catch(e) {
+  initialize = async () => false;
+  requestPermission = async () => [];
+  readRecords = async () => ({ records: [] });
+}
 
 // ─── Metas ───────────────────────────────────────────────────
 const METAS = [
